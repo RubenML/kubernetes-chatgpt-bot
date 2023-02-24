@@ -60,29 +60,36 @@ def show_chat_gpt_search(event: ExecutionBaseEvent, params: ChatGPTParams):
 
 @action
 def chat_gpt_enricher(alert: PrometheusKubernetesAlert, params: ChatGPTTokenParams):
+    # """
+    # Add a button to the alert - clicking it will ask chat gpt to help find a solution.
+    # """
+    # alert_name = alert.alert.labels.get("alertname", "")
+    # if not alert_name:
+    #     return
+
+    # alert.add_enrichment(
+    #     [
+    #         CallbackBlock(
+    #             {
+    #                 f'Ask ChatGPT': CallbackChoice(
+    #                     action=show_chat_gpt_search,
+    #                     action_params=ChatGPTParams(
+    #                         search_term=f"How to solve {alert_name} on Kubernetes?",
+    #                         chat_gpt_token=params.chat_gpt_token,
+    # ),
+    #                 )
+    #             },
+    #         )
+    #     ]
+    # )
     """
-    Add a button to the alert - clicking it will ask chat gpt to help find a solution.
+    Add a finding with ChatGPT top results for the specified search term.
+    This action can be used together with the stack_overflow_enricher.
     """
     alert_name = alert.alert.labels.get("alertname", "")
     if not alert_name:
         return
 
-    #alert.add_enrichment(
-    #    [
-    #        CallbackBlock(
-    #            {
-    #                f'Ask ChatGPT': CallbackChoice(
-    #                    action=show_chat_gpt_search,
-    #                    action_params=ChatGPTParams(
-    #                        search_term=f"How to solve {alert_name} on Kubernetes?",
-    #                        chat_gpt_token=params.chat_gpt_token,
-    #),
-    #                )
-    #            },
-    #        )
-    #    ]
-    #)
-    
     search_term = f"How to solve {alert_name} on Kubernetes?"
 
     openai.api_key = params.chat_gpt_token
@@ -101,8 +108,6 @@ def chat_gpt_enricher(alert: PrometheusKubernetesAlert, params: ChatGPTTokenPara
 
     if answers:
         alert.add_enrichment([FileBlock(f"ChatGPT recommends about *{search_term}*", ListBlock(answers)])
-        #alert.add_enrichment([MarkdownBlock(f"ChatGPT Results *{search_term}*")])
-        #alert.add_enrichment([ListBlock(answers)])
     else:
         alert.add_enrichment(
             [
