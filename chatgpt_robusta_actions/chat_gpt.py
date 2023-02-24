@@ -107,7 +107,7 @@ def chat_gpt_enricher(alert: PrometheusKubernetesAlert, params: ChatGPTTokenPara
             answers.append(choice.text)
 
     if answers:
-        alert.add_enrichment([FileBlock(f"ChatGPT recommends about *{search_term}*", ListBlock(answers)])
+        alert.add_enrichment([FileBlock(f"ChatGPT recommends about *{search_term}*", ListBlock(answers))])
     else:
         alert.add_enrichment(
             [
