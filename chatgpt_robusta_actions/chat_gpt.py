@@ -67,18 +67,47 @@ def chat_gpt_enricher(alert: PrometheusKubernetesAlert, params: ChatGPTTokenPara
     if not alert_name:
         return
 
-    alert.add_enrichment(
-        [
-            CallbackBlock(
-                {
-                    f'Ask ChatGPT': CallbackChoice(
-                        action=show_chat_gpt_search,
-                        action_params=ChatGPTParams(
-                            search_term=f"How to solve {alert_name} on Kubernetes?",
-                            chat_gpt_token=params.chat_gpt_token,
-    ),
-                    )
-                },
-            )
-        ]
+    #alert.add_enrichment(
+    #    [
+    #        CallbackBlock(
+    #            {
+    #                f'Ask ChatGPT': CallbackChoice(
+    #                    action=show_chat_gpt_search,
+    #                    action_params=ChatGPTParams(
+    #                        search_term=f"How to solve {alert_name} on Kubernetes?",
+    #                        chat_gpt_token=params.chat_gpt_token,
+    #),
+    #                )
+    #            },
+    #        )
+    #    ]
+    #)
+    
+    search_term = f"How to solve {alert_name} on Kubernetes?"
+
+    openai.api_key = params.chat_gpt_token
+    res: OpenAIObject = openai.Completion.create(
+        model="text-davinci-003",
+        prompt=search_term,
+        max_tokens=1000,
+        temperature=0
     )
+
+
+    answers = []
+    if res:
+        for choice in res.choices:
+            answers.append(choice.text)
+
+    if answers:
+        alert.add_enrichment([FileBlock(f"ChatGPT recommends about *{search_term}*", ListBlock(answers)])
+        #alert.add_enrichment([MarkdownBlock(f"ChatGPT Results *{search_term}*")])
+        #alert.add_enrichment([ListBlock(answers)])
+    else:
+        alert.add_enrichment(
+            [
+                MarkdownBlock(
+                    f'Sorry, ChatGPT doesn\'t know anything about "{search_term}"'
+                )
+            ]
+        )
